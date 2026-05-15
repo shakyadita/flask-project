@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Summary</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0e12; --surface: #16161c; --card: #1c1c24;
+      --border: #2a2a36; --accent: #7c6af7; --accent2: #f7c26a;
+      --text: #e8e8f0; --muted: #7a7a96;
+      --font-h: 'Syne', sans-serif; --font-b: 'DM Sans', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-b); min-height: 100vh; }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+    }
+    nav .brand { font-family: var(--font-h); font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+    nav .brand span { color: var(--accent2); }
+    nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-left: 1.5rem; }
+    nav a:hover { color: var(--text); }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-title { font-family: var(--font-h); font-size: 1.6rem; font-weight: 800; margin-bottom: 1.5rem; }
+    .page-title span { color: var(--accent); }
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+    .stat-card .label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem; }
+    .stat-card .value { font-family: var(--font-h); font-size: 1.7rem; font-weight: 700; color: var(--accent); }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 700px) { .charts { grid-template-columns: 1fr; } }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; }
+    .panel h2 { font-family: var(--font-h); font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; }
+    canvas { max-height: 280px; }
+    .empty { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="brand">expense<span>.</span>track</div>
+  <div>
+    <a href="{{ url_for('index') }}">Dashboard</a>
+    <a href="{{ url_for('summary') }}">Summary</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-title">Spending <span>Summary</span></div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="label">All-Time Total</div>
+      <div class="value">₹{{ "%.0f"|format(grand_total) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Months Tracked</div>
+      <div class="value" style="color:var(--accent2)">{{ monthly_data|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Categories Used</div>
+      <div class="value" style="color:#6af7b0">{{ category_data|length }}</div>
+    </div>
+  </div>
+
+  {% if monthly_data %}
+  <div class="charts">
+    <div class="panel">
+      <h2>Monthly Spending</h2>
+      <canvas id="monthlyChart"></canvas>
+    </div>
+    <div class="panel">
+      <h2>By Category</h2>
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty">No data yet. Start adding expenses!</div>
+  {% endif %}
+</div>
+
+<script>
+  const months   = {{ monthly_data   | map(attribute='month')     | list | tojson }};
+  const mTotals  = {{ monthly_data   | map(attribute='total')     | list | tojson }};
+  const cats     = {{ category_data  | map(attribute='category')  | list | tojson }};
+  const cTotals  = {{ category_data  | map(attribute='total')     | list | tojson }};
+
+  const palette = ['#7c6af7','#f7c26a','#6af7b0','#f76a6a','#6ac6f7','#c06af7','#f7a06a','#6af7f7'];
+
+  if (months.length) {
+    new Chart(document.getElementById('monthlyChart'), {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{ label: 'Total (₹)', data: mTotals,
+          backgroundColor: '#7c6af766', borderColor: '#7c6af7',
+          borderWidth: 2, borderRadius: 6 }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#7a7a96' }, grid: { color: '#2a2a36' } },
+          y: { ticks: { color: '#7a7a96' }, grid: { color: '#2a2a36' } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('categoryChart'), {
+      type: 'doughnut',
+      data: {
+        labels: cats,
+        datasets: [{ data: cTotals, backgroundColor: palette, borderWidth: 0 }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#7a7a96', padding: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>

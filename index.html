@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0e0e12;
+      --surface:  #16161c;
+      --card:     #1c1c24;
+      --border:   #2a2a36;
+      --accent:   #7c6af7;
+      --accent2:  #f7c26a;
+      --danger:   #f76a6a;
+      --success:  #6af7b0;
+      --text:     #e8e8f0;
+      --muted:    #7a7a96;
+      --font-h:   'Syne', sans-serif;
+      --font-b:   'DM Sans', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-b);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav .brand {
+      font-family: var(--font-h);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    nav .brand span { color: var(--accent2); }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1.5rem;
+      transition: color 0.2s;
+    }
+    nav a:hover, nav a.active { color: var(--text); }
+
+    /* ── Layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Stats Row ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.4rem;
+    }
+    .stat-card .value {
+      font-family: var(--font-h);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stat-card .value.warn { color: var(--accent2); }
+
+    /* ── Grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Add Form ── */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .panel h2 {
+      font-family: var(--font-h);
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      font-family: var(--font-b);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--accent);
+    }
+    .form-group select option { background: var(--surface); }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-family: var(--font-h);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; text-align: center; }
+    .btn-danger  { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+    .btn-edit    { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+    .btn:hover   { opacity: 0.85; }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      align-items: center;
+    }
+    .filters select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.5rem 0.9rem;
+      font-family: var(--font-b);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+    .filters select:focus { border-color: var(--accent); }
+    .filter-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-family: var(--font-h);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ── Expense List ── */
+    .expense-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .expense-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: border-color 0.2s;
+    }
+    .expense-item:hover { border-color: var(--accent); }
+
+    .expense-left { display: flex; align-items: center; gap: 0.9rem; flex: 1; min-width: 0; }
+    .cat-dot {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .expense-info { min-width: 0; }
+    .expense-title {
+      font-weight: 500;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .expense-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .expense-right { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
+    .expense-amount {
+      font-family: var(--font-h);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent2);
+      min-width: 80px;
+      text-align: right;
+    }
+    .expense-actions { display: flex; gap: 0.4rem; }
+
+    /* ── Category colors ── */
+    .c-food          { background: #2a1f3d; color: #c084fc; }
+    .c-transport     { background: #1a2e3d; color: #60a5fa; }
+    .c-shopping      { background: #2d1f1f; color: #f87171; }
+    .c-bills         { background: #1f2d1f; color: #4ade80; }
+    .c-health        { background: #2d2a1f; color: #fbbf24; }
+    .c-entertainment { background: #1f2d2d; color: #2dd4bf; }
+    .c-education     { background: #2a2d1f; color: #a3e635; }
+    .c-other         { background: #2a2a2a; color: #9ca3af; }
+
+    /* ── Category breakdown ── */
+    .cat-bar-list { display: flex; flex-direction: column; gap: 0.7rem; margin-top: 0.5rem; }
+    .cat-bar-item {}
+    .cat-bar-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+    .cat-bar-header span:last-child { color: var(--text); font-weight: 500; }
+    .bar-track {
+      background: var(--border);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--accent);
+      transition: width 0.6s ease;
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .empty p { font-size: 0.9rem; }
+
+    /* ── Page title ── */
+    .page-title {
+      font-family: var(--font-h);
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+    }
+    .page-title span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">expense<span>.</span>track</div>
+  <div>
+    <a href="{{ url_for('index') }}" class="active">Dashboard</a>
+    <a href="{{ url_for('summary') }}">Summary</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="page-title">My <span>Expenses</span></div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Month Total</div>
+      <div class="value">₹{{ "%.0f"|format(total) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Transactions</div>
+      <div class="value warn">{{ expenses|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Top Category</div>
+      <div class="value" style="font-size:1.1rem; padding-top:0.4rem;">
+        {% if category_totals %}{{ category_totals[0]['category'] }}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Left: list + filters -->
+    <div>
+      <!-- Filters -->
+      <form method="GET" action="/">
+        <div class="filters">
+          <select name="month">
+            {% for m in months %}
+            <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+          <select name="category">
+            <option value="All" {% if selected_cat == 'All' %}selected{% endif %}>All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {% if c == selected_cat %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="filter-btn">Filter</button>
+        </div>
+      </form>
+
+      <!-- Expense list -->
+      <div class="expense-list">
+        {% if expenses %}
+          {% for e in expenses %}
+          {% set cat_lower = e['category']|lower %}
+          <div class="expense-item">
+            <div class="expense-left">
+              <div class="cat-dot c-{{ cat_lower }}">
+                {% if cat_lower == 'food' %}🍔
+                {% elif cat_lower == 'transport' %}🚌
+                {% elif cat_lower == 'shopping' %}🛍️
+                {% elif cat_lower == 'bills' %}💡
+                {% elif cat_lower == 'health' %}💊
+                {% elif cat_lower == 'entertainment' %}🎬
+                {% elif cat_lower == 'education' %}📚
+                {% else %}📦{% endif %}
+              </div>
+              <div class="expense-info">
+                <div class="expense-title">{{ e['title'] }}</div>
+                <div class="expense-meta">{{ e['category'] }} &nbsp;·&nbsp; {{ e['date'] }}
+                  {% if e['note'] %}&nbsp;·&nbsp; {{ e['note'][:30] }}{% if e['note']|length > 30 %}…{% endif %}{% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="expense-right">
+              <div class="expense-amount">₹{{ "%.0f"|format(e['amount']) }}</div>
+              <div class="expense-actions">
+                <a href="{{ url_for('edit_expense', expense_id=e['id']) }}" class="btn btn-edit">Edit</a>
+                <a href="{{ url_for('delete_expense', expense_id=e['id']) }}"
+                   class="btn btn-danger"
+                   onclick="return confirm('Delete this expense?')">Del</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty">
+            <div class="icon">💸</div>
+            <p>No expenses found for this period.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: add form + breakdown -->
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+
+      <!-- Add Expense -->
+      <div class="panel">
+        <h2>+ Add Expense</h2>
+        <form method="POST" action="/add">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" name="title" placeholder="e.g. Lunch at cafe" required/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Amount (₹)</label>
+              <input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required/>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" name="date" value="{{ now }}" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select name="category">
+              {% for c in categories %}
+              <option>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Note (optional)</label>
+            <input type="text" name="note" placeholder="Any extra detail..."/>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Expense</button>
+        </form>
+      </div>
+
+      <!-- Category Breakdown -->
+      {% if category_totals %}
+      <div class="panel">
+        <h2>Category Breakdown</h2>
+        <div class="cat-bar-list">
+          {% set max_val = category_totals[0]['cat_total'] %}
+          {% for row in category_totals %}
+          <div class="cat-bar-item">
+            <div class="cat-bar-header">
+              <span>{{ row['category'] }}</span>
+              <span>₹{{ "%.0f"|format(row['cat_total']) }}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: {{ ((row['cat_total'] / max_val) * 100)|int }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Set today's date as default
+  const dateInput = document.querySelector('input[name="date"]');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = new Date().toISOString().split('T')[0];
+  }
+</script>
+</body>
+</html>

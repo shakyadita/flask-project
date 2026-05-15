@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Expense</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0e0e12; --surface: #16161c; --card: #1c1c24;
+      --border: #2a2a36; --accent: #7c6af7; --accent2: #f7c26a;
+      --text: #e8e8f0; --muted: #7a7a96;
+      --font-h: 'Syne', sans-serif; --font-b: 'DM Sans', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-b); min-height: 100vh; }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+    }
+    nav .brand { font-family: var(--font-h); font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+    nav .brand span { color: var(--accent2); }
+    nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-left: 1.5rem; }
+    nav a:hover { color: var(--text); }
+    .container { max-width: 520px; margin: 3rem auto; padding: 0 1.5rem; }
+    .page-title { font-family: var(--font-h); font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; }
+    .page-title span { color: var(--accent); }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.75rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); padding: 0.65rem 0.9rem;
+      font-family: var(--font-b); font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .btn-row { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+    .btn {
+      flex: 1; padding: 0.75rem; border-radius: 8px; border: none;
+      font-family: var(--font-h); font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; text-align: center; text-decoration: none; display: inline-block;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="brand">expense<span>.</span>track</div>
+  <div>
+    <a href="{{ url_for('index') }}">Dashboard</a>
+    <a href="{{ url_for('summary') }}">Summary</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-title">Edit <span>Expense</span></div>
+  <div class="panel">
+    <form method="POST">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" name="title" value="{{ expense['title'] }}" required/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" name="amount" step="0.01" value="{{ expense['amount'] }}" required/>
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" name="date" value="{{ expense['date'] }}" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select name="category">
+          {% for c in categories %}
+          <option {% if c == expense['category'] %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note</label>
+        <input type="text" name="note" value="{{ expense['note'] or '' }}"/>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>
